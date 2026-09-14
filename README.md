@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # API Pedidos
 
 ## Estrutura mínima p/ testar
@@ -30,3 +31,6 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 # Docs: http://localhost:8000/docs
 ```
+=======
+# APIPedidos
+>>>>>>> 3689548c07656464ef5c2f0fae3e07b1354a79e9
