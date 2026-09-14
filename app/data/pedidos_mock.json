@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "cliente": "Maria Silva",
+    "produto": "Mouse Gamer",
+    "quantidade": 2,
+    "valor_unitario": 150.0,
+    "valor_total": 300.0,
+    "status": "CRIADO",
+    "data_criacao": "2026-09-01T10:00:00+00:00"
+  },
+  {
+    "id": 2,
+    "cliente": "Joao Santos",
+    "produto": "Teclado Mecanico",
+    "quantidade": 1,
+    "valor_unitario": 350.0,
+    "valor_total": 350.0,
+    "status": "CONFIRMADO",
+    "data_criacao": "2026-09-02T14:30:00+00:00"
+  },
+  {
+    "id": 3,
+    "cliente": "Ana Oliveira",
+    "produto": "Monitor 24 pol",
+    "quantidade": 1,
+    "valor_unitario": 899.9,
+    "valor_total": 899.9,
+    "status": "CRIADO",
+    "data_criacao": "2026-09-03T09:15:00+00:00"
+  },
+  {
+    "id": 4,
+    "cliente": "Carlos Lima",
+    "produto": "Headset USB",
+    "quantidade": 3,
+    "valor_unitario": 199.9,
+    "valor_total": 599.7,
+    "status": "CANCELADO",
+    "data_criacao": "2026-09-04T16:45:00+00:00"
+  },
+  {
+    "id": 5,
+    "cliente": "João Pedro",
+    "produto": "USB",
+    "quantidade": 2,
+    "valor_unitario": 50.0,
+    "valor_total": 100.0,
+    "status": "CONFIRMADO",
+    "data_criacao": "2026-09-05T16:45:00+00:00"
+  }
+]
