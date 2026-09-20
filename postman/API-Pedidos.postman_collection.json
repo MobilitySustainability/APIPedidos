@@ -1,0 +1,387 @@
+{
+  "info": {
+    "name": "API Pedidos - Docker e MySQL",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Execute em ordem no Collection Runner. Cada execução cria um pedido de teste e o cancela ao final."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "pedido_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Saúde",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"API e banco disponíveis\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Criar pedido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pedidos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"Teste Postman\",\n  \"produto\": \"Mouse\",\n  \"quantidade\": 3,\n  \"valor_unitario\": 19.9\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "const p = pm.response.json();",
+              "pm.collectionVariables.set(\"pedido_id\", p.id);",
+              "pm.test(\"Total calculado e status inicial\", () => { pm.expect(p.valor_total).to.eql(59.7); pm.expect(p.status).to.eql(\"CRIADO\"); pm.expect(p.id).to.be.above(0); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Consultar pedido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/pedidos/{{pedido_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Pedido persistido\", () => { const p = pm.response.json(); pm.expect(p.id).to.eql(Number(pm.collectionVariables.get(\"pedido_id\"))); pm.expect(p.valor_total).to.eql(59.7); pm.expect(p.status).to.eql(\"CRIADO\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Listar pedidos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/pedidos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Lista contém pedido criado\", () => pm.expect(pm.response.json().some(p => p.id === Number(pm.collectionVariables.get(\"pedido_id\")))).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Confirmar pedido",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pedidos/{{pedido_id}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"CONFIRMADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Status atualizado\", () => pm.expect(pm.response.json().status).to.eql(\"CONFIRMADO\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Consultar status persistido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/pedidos/{{pedido_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Status salvo no banco\", () => { const p = pm.response.json(); pm.expect(p.status).to.eql(\"CONFIRMADO\"); pm.expect(p.valor_total).to.eql(59.7); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Pedido inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/pedidos/0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Atualizar inexistente",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pedidos/0/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"CANCELADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Quantidade inválida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pedidos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"Teste\",\n  \"produto\": \"Mouse\",\n  \"quantidade\": 0,\n  \"valor_unitario\": 10\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Status inválido",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pedidos/{{pedido_id}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"INVALIDO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Cliente em branco",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pedidos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"  \",\n  \"produto\": \"Mouse\",\n  \"quantidade\": 1,\n  \"valor_unitario\": 10\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Preço com precisão inválida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pedidos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"Teste\",\n  \"produto\": \"Mouse\",\n  \"quantidade\": 1,\n  \"valor_unitario\": 1.999\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Cancelar pedido",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pedidos/{{pedido_id}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"CANCELADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Cancelamento confirmado\", () => pm.expect(pm.response.json().status).to.eql(\"CANCELADO\"));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

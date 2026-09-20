@@ -1,0 +1,50 @@
+name: api-pedidos
+services:
+  pedidos:
+    build: .
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pedidos}
+      MYSQL_USER: ${MYSQL_USER:-pedidos_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-pedidos_dev_password}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 5
+      start_period: 15s
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pedidos}
+      MYSQL_USER: ${MYSQL_USER:-pedidos_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-pedidos_dev_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_dev_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u\"$$MYSQL_USER\" \"$$MYSQL_DATABASE\" -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+  tests:
+    image: node:22-alpine
+    profiles: ["test"]
+    volumes:
+      - ./postman:/etc/postman:ro
+    depends_on:
+      pedidos:
+        condition: service_healthy
+    command: ["npx", "--yes", "newman@6.2.1", "run", "/etc/postman/API-Pedidos.postman_collection.json", "--env-var", "base_url=http://pedidos:8000"]
+
+volumes:
+  mysql_data:

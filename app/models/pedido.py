@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
+from decimal import Decimal
 
 
 class StatusPedido(str, Enum):
@@ -17,7 +18,7 @@ class Pedido:
     cliente: str
     produto: str
     quantidade: int
-    valor_unitario: float
-    valor_total: float
+    valor_unitario: Decimal
+    valor_total: Decimal
     status: StatusPedido = StatusPedido.CRIADO
     data_criacao: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
